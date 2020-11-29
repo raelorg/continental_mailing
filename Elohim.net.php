@@ -68,6 +68,7 @@ class cElohimNet
    
       add_action( 'admin_menu', array ( $this, 'add_admin_pages' ) );
       add_action( 'do_import', array( $this, 'import' ) );
+      add_action( 'do_resume', array( $this, 'resume' ) );
       add_action( $this->elohimnet_cron, array( $this, 'cron_execution' ) );
       add_action( 'do_save_settings', array( $this, 'save_settings') );
    }
@@ -108,6 +109,17 @@ class cElohimNet
       }
    }
 
+   // --------------------------------------------------------------------------------
+   // Récréation des procédure stockées
+   // > Pour une raison que j'ignore, les procédures stockées disparaissent de temps
+   //   en temps.
+   // --------------------------------------------------------------------------------
+   public function recreate_SP() {
+      $oDatabase = new cDatabase();
+
+      $oDatabase->create_stored_procedure();
+   }
+   
    // --------------------------------------------------------------------------------
    // Activation du plugin
    // > Création des tables SQL et procédures stockées
@@ -215,6 +227,34 @@ class cElohimNet
       $format_data = '%s';
 
       $wpdb->insert( 'elohimnet_log', $log_data, $format_data );
+   }
+
+   // -------------------------------------------------------
+   // Déterminer et conserver le dernier id_import
+   // -------------------------------------------------------
+   function elohimnet_set_id_import() {
+      global $wpdb;
+
+      $query = 'select MAX(id_import) from elohimnet_import';
+      $id = $wpdb->get_var( $query );
+
+      $this->id_import = $id;
+   }
+
+   // -------------------------------------------------------
+   // Vérifier l'écriture d'un log
+   // -------------------------------------------------------
+   function elohimnet_get_log( $comment ) {
+      global $wpdb;
+
+      $query = "select * from elohimnet_log where id_import=" . $this->id_import . " and comment='" . $comment . "';";
+      $log = $wpdb->get_results( $query, ARRAY_A );
+
+      if ( empty( $log ) ) {
+         return false;
+      }
+
+      return true;
    }
 
    // --------------------------------------------------------------------------------
@@ -380,6 +420,18 @@ class cElohimNet
       }
    }
 
+
+   // --------------------------------------------------------------------------------
+   // Retenir que les emails valide
+   // --------------------------------------------------------------------------------
+   function importInTable_KeepValidEmail() {
+      global $wpdb;
+
+      $wpdb->query("CALL SP_LoadValidEmail()");
+
+      $this->elohimnet_log( 'importInTable_KeepValidEmail: SP_LoadValidEmail completed' );
+   }
+
    // --------------------------------------------------------------------------------
    // Importer tous les emails de Elohim.net dans notre base de données
    // --------------------------------------------------------------------------------
@@ -401,25 +453,23 @@ class cElohimNet
                break;
          }
 
-         $ctx = stream_context_create( array( 'http' => array( 'timeout' => 1200 ) ) );
+         //$ctx = stream_context_create( array( 'http' => array( 'timeout' => 2400 ) ) );
 
-         $contents = file_get_contents( $url, FALSE, $ctx );
+         ini_set('default_socket_timeout', 900); // 900 Seconds = 15 Minutes
+
+         //$contents = file_get_contents( $url, FALSE, $ctx );
+         $contents = file_get_contents( $url, FALSE );
          $items    = simplexml_load_string( $contents );
-         $count    = 0;
+         $count    = 0; // plante à 14999 sur 15546
 
          foreach ($items as $item) {
+            $count = $count + 1;
             if ( $this->insert_import_email( $item ) === 'insert' ) {
                 $this->insert_import_email_list( $item );
             }
          }
 
-         $this->elohimnet_log( 'importInTable: foreach completed ' );
-
-         global $wpdb;
-
-         $wpdb->query("CALL SP_LoadValidEmail()");
-
-         $this->elohimnet_log( 'importInTable: SP_LoadValidEmail completed ' );
+         $this->elohimnet_log( 'importInTable: foreach completed' );
       }
 
       $this->elohimnet_log( 'importInTable: completed' );
@@ -615,6 +665,8 @@ class cElohimNet
       if ( $options['unsubscribe'] === 'yes' ) {
          $this->process_unsubscribe();
       }
+
+      $this->elohimnet_log( 'update_Mailpoet: completed' );
    }
 
    // --------------------------------------------------------------------------------
@@ -664,13 +716,17 @@ class cElohimNet
    }
 
    // --------------------------------------------------------------------------------
-   // Exécuter une importation
+   // Lancer une importation
    // --------------------------------------------------------------------------------
    public function import() {
-      $this->elohimnet_log( 'import: begin' );
+      $this->recreate_SP();
 
       $this->insert_import();
+
+      $this->elohimnet_log( 'import: beginning' );
+
       $this->importInTable();
+      $this->importInTable_KeepValidEmail();
 
       if ( $this->isFirstImport() ) {
          $this->loadAll();
@@ -685,6 +741,115 @@ class cElohimNet
 
       $this->elohimnet_log( 'import: completed' );
    } // import
+
+   // --------------------------------------------------------------------------------
+   // Supprimer une importation partielle
+   // --------------------------------------------------------------------------------
+   public function deleteImport() {
+      global $wpdb;
+
+      $wpdb->delete( 'elohimnet_import_email_list', array( 'id_import' => $this->id_import ) );
+      $wpdb->delete( 'elohimnet_import_email', array( 'id_import' => $this->id_import ) );
+
+      $this->elohimnet_log( 'resume: deleteImport' );
+   }
+
+   // --------------------------------------------------------------------------------
+   // Vérifier si la comparaison a été faite
+   // --------------------------------------------------------------------------------
+   public function resumeCompare() {
+      global $wpdb;
+      $retour = true;
+
+      $query = 'SELECT * FROM elohimnet_import_new WHERE id_import = ' . $this->id_import;
+   
+      $news = $wpdb->get_results( $query, ARRAY_A );
+
+      if ( $news ) {
+         $retour = false;
+      }
+
+      $query = 'SELECT * FROM elohimnet_import_updated WHERE id_import = ' . $this->id_import;
+   
+      $Updated = $wpdb->get_results( $query, ARRAY_A );
+
+      if ( $Updated ) {
+         $retour = false;
+      }
+
+      $query = 'SELECT * FROM elohimnet_import_deleted WHERE id_import = ' . $this->id_import;
+   
+      $deleted = $wpdb->get_results( $query, ARRAY_A );
+
+      if ( $deleted ) {
+         $retour = false;
+      }
+
+      $this->elohimnet_log( 'resume: resumeCompare' );
+
+      return $retour;
+   }
+
+   // --------------------------------------------------------------------------------
+   // Vérifier si elohimnet_unsubscribers_return_to_elohim_net a été fait
+   // --------------------------------------------------------------------------------
+   public function resume_elohimnet_unsubscribers_return_to_elohim_net() {
+      global $wpdb;
+      $retour = true;
+
+      $query = 'SELECT * FROM elohimnet_unsubscribers_return_to_elohim_net WHERE id_import = ' . $this->id_import;
+   
+      $results = $wpdb->get_results( $query, ARRAY_A );
+
+      if ( $results ) {
+         $retour = false;
+      }
+
+      $this->elohimnet_log( 'resume: elohimnet_unsubscribers_return_to_elohim_net' );
+
+      return $retour;
+   }
+
+   // --------------------------------------------------------------------------------
+   // Reprendre une importation
+   // --------------------------------------------------------------------------------
+   public function resume() {
+
+      $this->recreate_SP();
+      $this->elohimnet_set_id_import();
+
+      if ( $this->elohimnet_get_log( 'import: completed' ) ) {
+         $this->elohimnet_log( 'resume: nothing to do' );
+         return;
+      }
+
+      if ( !$this->elohimnet_get_log( 'importInTable: foreach completed' ) ) {
+         $this->deleteImport();
+         $this->importInTable();
+      }
+
+      if ( !$this->elohimnet_get_log( 'importInTable_KeepValidEmail: SP_LoadValidEmail completed' ) ) {
+         $this->importInTable_KeepValidEmail();
+      }
+
+      if ( $this->resumeCompare() ) {
+         $this->CompareImport();
+      }
+
+      if ( $this->resume_elohimnet_unsubscribers_return_to_elohim_net() ) {
+         $this->unsubscribers_to_Elohimnet();
+      }
+
+      if ( !$this->elohimnet_get_log( 'update_Mailpoet: completed' ) ) {
+         $this->update_Mailpoet();
+      }
+
+      $this->updateImport();
+      $this->send_report();
+
+      $this->elohimnet_log( 'resume: completed' );
+      $this->elohimnet_log( 'import: completed' );
+   } // resume
 
    public function save_settings() {
       $options['id_EN_list'] = sanitize_text_field( $_POST['id_EN_list'] );
