@@ -26,7 +26,7 @@ DELIMITER $$
 --
 -- Procédures
 --
-CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_CompareImport` ()  NO SQL
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_CompareImport` ()
 BEGIN
    DECLARE id_actuel INT;
    DECLARE id_precedent INT;
@@ -89,7 +89,7 @@ BEGIN
 
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GenerateAll` ()  NO SQL
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GenerateAll` ()
 BEGIN
 
 	SELECT
@@ -212,7 +212,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GenerateCSV` ()  BEGIN
 ';
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GenerateUnsubscribers` ()  NO SQL
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GenerateUnsubscribers` ()
 BEGIN
 
     Drop Table If EXISTS Unsubscribers_to_export;
@@ -249,7 +249,7 @@ BEGIN
 
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_InvalidEmail_EN` ()  NO SQL
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_InvalidEmail_EN` ()
 BEGIN
    SELECT
     'Email' as email
@@ -271,7 +271,7 @@ BEGIN
 
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_InvalidEmail_FR` ()  NO SQL
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_InvalidEmail_FR` ()
 BEGIN
    SELECT
     'Email' as email
@@ -293,7 +293,7 @@ BEGIN
 
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_SelectRaisonUnsubscribed` ()  NO SQL
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_SelectRaisonUnsubscribed` ()
 BEGIN 
 
     DECLARE id_actuel INT;
@@ -318,7 +318,7 @@ END$$
 --
 -- Fonctions
 --
-CREATE DEFINER=`root`@`localhost` FUNCTION `FN_InternationalMailoutsOnly` (`email_in` VARCHAR(1024) CHARSET latin1) RETURNS VARCHAR(1024) CHARSET latin1 NO SQL
+CREATE DEFINER=`root`@`localhost` FUNCTION `FN_InternationalMailoutsOnly` (`email_in` VARCHAR(1024) CHARSET latin1) RETURNS VARCHAR(1024) CHARSET latin1
 BEGIN
   DECLARE email_found VARCHAR(1024);
   

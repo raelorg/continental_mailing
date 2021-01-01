@@ -369,10 +369,9 @@ class cDatabase {
 
             SELECT COUNT(*) 
                 FROM
-                    elohimnet_import_new n
-                    JOIN wp_mailpoet_subscribers mp on mp.email = n.email
-                    JOIN elohimnet_email_data d on d.email = n.email
+                    wp_mailpoet_subscribers mp
                     JOIN wp_mailpoet_subscriber_segment seg on seg.subscriber_id = mp.id                     
+                    JOIN elohimnet_email_data d on d.email = mp.email
             WHERE mp.status Not in ('subscribed', 'inactive')
                 AND seg.segment_id in (" . $list . ")
             INTO n_bad;
@@ -386,8 +385,10 @@ class cDatabase {
             SELECT count(distinct ret.email)
             FROM 
                 elohimnet_unsubscribers_return_to_elohim_net ret 
-                JOIN elohimnet_email_valid v on v.email = ret.email
-                WHERE ret.id_import <> id_actuel 
+                JOIN elohimnet_import_email ie on ie.email = ret.email
+            WHERE ie.FollowStatus Not in ('Email bounced','Not interested')
+              AND ie.type in ('M','S','R','P','XM','XR','XS')
+              AND ie.id_import = id_actuel
             INTO n_unsub_returned_refused;
 
             UPDATE elohimnet_import

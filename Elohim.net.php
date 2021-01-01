@@ -361,34 +361,34 @@ class cElohimNet
 
       $import_email_data = array();
 		$import_email_data['id_import'] = $this->id_import;
-		$import_email_data['email'] = $item->email;
-		$import_email_data['language'] = $item->language;
-		$import_email_data['type'] = $item->type;
-		$import_email_data['firstname'] = $item->firstname;
-		$import_email_data['lastname'] = $item->lastname;
-		$import_email_data['nickname'] = $item->nickname;
-		$import_email_data['town'] = $item->town;
-		$import_email_data['state'] = $item->state;
-		$import_email_data['level'] = $item->level;
-		$import_email_data['gender'] = $item->gender;
-		$import_email_data['transmission'] = $item->transmission;
-		$import_email_data['datestamp'] = $item->datestamp;
-      $import_email_data['FollowStatus'] = $item->followupstatus;
+      $import_email_data['email'] = utf8_encode($item->email); 
+		$import_email_data['language'] = utf8_encode($item->language);
+		$import_email_data['type'] = utf8_encode($item->type);
+		$import_email_data['firstname'] = utf8_encode($item->firstname);
+		$import_email_data['lastname'] = utf8_encode($item->lastname);
+		$import_email_data['nickname'] = utf8_encode($item->nickname);
+		$import_email_data['town'] = utf8_encode($item->town);
+		$import_email_data['state'] = utf8_encode($item->state);
+		$import_email_data['level'] = utf8_encode($item->level);
+		$import_email_data['gender'] = utf8_encode($item->gender);
+		$import_email_data['transmission'] = utf8_encode($item->transmission);
+		$import_email_data['datestamp'] = utf8_encode($item->datestamp);
+      $import_email_data['FollowStatus'] = utf8_encode($item->followupstatus);
 
       $email_data = array();
-		$email_data['email'] = $item->email;
-		$email_data['language'] = $item->language;
-		$email_data['type'] = $item->type;
-		$email_data['firstname'] = $item->firstname;
-		$email_data['lastname'] = $item->lastname;
-		$email_data['nickname'] = $item->nickname;
-		$email_data['town'] = $item->town;
-		$email_data['state'] = $item->state;
-		$email_data['level'] = $item->level;
-		$email_data['gender'] = $item->gender;
-		$email_data['transmission'] = $item->transmission;
-		$email_data['datestamp'] = $item->datestamp;
-      $email_data['FollowStatus'] = $item->followupstatus;
+		$email_data['email'] = utf8_encode($item->email);
+		$email_data['language'] = utf8_encode($item->language);
+		$email_data['type'] = utf8_encode($item->type);
+		$email_data['firstname'] = utf8_encode($item->firstname);
+		$email_data['lastname'] = utf8_encode($item->lastname);
+		$email_data['nickname'] = utf8_encode($item->nickname);
+		$email_data['town'] = utf8_encode($item->town);
+		$email_data['state'] = utf8_encode($item->state);
+		$email_data['level'] = utf8_encode($item->level);
+		$email_data['gender'] = utf8_encode($item->gender);
+		$email_data['transmission'] = utf8_encode($item->transmission);
+		$email_data['datestamp'] = utf8_encode($item->datestamp);
+      $email_data['FollowStatus'] = utf8_encode($item->followupstatus);
 
       $row = $wpdb->insert( 'elohimnet_import_email', $import_email_data ); 
 
@@ -411,8 +411,8 @@ class cElohimNet
       foreach ($item->subscribed->list as $list) {
          $import_email_list_data = array();
          $import_email_list_data['id_import'] = $this->id_import;
-         $import_email_list_data['email'] = $item->email;
-         $import_email_list_data['list'] = $list;
+         $import_email_list_data['email'] = utf8_encode($item->email);
+         $import_email_list_data['list'] = utf8_encode($list);
 
          if ($import_email_list_data['list'] != 'International Mailouts') {
             $wpdb->insert( 'elohimnet_import_email_list', $import_email_list_data );
