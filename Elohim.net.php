@@ -97,17 +97,23 @@ class cElohimNet
    // ---------------------------------------------------------
    // elohimnet_cron task execution
    // ---------------------------------------------------------
-   public function cron_execution()
-   {
-      $options = get_option( 'elohimnet_options', array() );
+   public function cron_execution() 
+   { 
+      $options = get_option( 'elohimnet_options', array() ); 
 
-      // date('w') -> 0,1,2,3,4,5,6
-      $dayofweek = date('w') + 1;
+      // date('w') -> 0,1,2,3,4,5,6 
+      // 0 -> Sunday 
+      // 1 -> Monday 
+      // 5 -> Friday 
+      // 6 -> Saturday 
+      $dayofweek = date('w') + 1; 
 
-      if ( $dayofweek == $options['elohimnet_cron'] ) {
-         $this->import();
-      }
-   }
+      if ( $dayofweek == $options['elohimnet_cron'] ) { 
+         $this->import(); 
+      } else { 
+         $this->resume(); // Nécessaire pour USA car plusieurs reprises sont nécessaires
+      } 
+   } 
 
    // --------------------------------------------------------------------------------
    // Récréation des procédure stockées
