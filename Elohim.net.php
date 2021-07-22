@@ -50,7 +50,7 @@ class cElohimNet
       $this->id_import = 0;
       $this->first_import = false;
       $this->elohimnet_cron = 'elohimnet_cron';
-      
+
       $this->plugin = plugin_basename( __FILE__ );
    }
 
@@ -65,7 +65,7 @@ class cElohimNet
       register_deactivation_hook(__FILE__, array ( $this, 'cron_deactivation' ) );
 
       register_uninstall_hook( __FILE__, 'plugin_uninstall' );
-   
+
       add_action( 'admin_menu', array ( $this, 'add_admin_pages' ) );
       add_action( 'do_import', array( $this, 'import' ) );
       add_action( 'do_resume', array( $this, 'resume' ) );
@@ -85,7 +85,7 @@ class cElohimNet
       // Forcer le démarrage une heure plus tard
       wp_schedule_event(time() + (1 * 1 * 60 * 60), 'daily', $this->elohimnet_cron );
    }
-   
+
    // ---------------------------------------------------------
    // Clear elohimnet_cron task
    // ---------------------------------------------------------
@@ -97,23 +97,23 @@ class cElohimNet
    // ---------------------------------------------------------
    // elohimnet_cron task execution
    // ---------------------------------------------------------
-   public function cron_execution() 
-   { 
-      $options = get_option( 'elohimnet_options', array() ); 
+   public function cron_execution()
+   {
+      $options = get_option( 'elohimnet_options', array() );
 
-      // date('w') -> 0,1,2,3,4,5,6 
-      // 0 -> Sunday 
-      // 1 -> Monday 
-      // 5 -> Friday 
-      // 6 -> Saturday 
-      $dayofweek = date('w') + 1; 
+      // date('w') -> 0,1,2,3,4,5,6
+      // 0 -> Sunday
+      // 1 -> Monday
+      // 5 -> Friday
+      // 6 -> Saturday
+      $dayofweek = date('w') + 1;
 
-      if ( $dayofweek == $options['elohimnet_cron'] ) { 
-         $this->import(); 
-      } else { 
+      if ( $dayofweek == $options['elohimnet_cron'] ) {
+         $this->import();
+      } else {
          $this->resume(); // Nécessaire pour USA car plusieurs reprises sont nécessaires
-      } 
-   } 
+      }
+   }
 
    // --------------------------------------------------------------------------------
    // Récréation des procédure stockées
@@ -125,7 +125,7 @@ class cElohimNet
 
       $oDatabase->create_stored_procedure();
    }
-   
+
    // --------------------------------------------------------------------------------
    // Activation du plugin
    // > Création des tables SQL et procédures stockées
@@ -140,7 +140,7 @@ class cElohimNet
 
       $this->elohimnet_set_default_options();
    }
-   
+
    // --------------------------------------------------------------------------------
    // Désactivation du plugin
    // --------------------------------------------------------------------------------
@@ -173,14 +173,14 @@ class cElohimNet
                         'elohimnet_plugin_help',           // menu_slug
                         array( $this, 'admin_help' ));     // function
    }
-   
+
    // --------------------------------------------------------------------------------
    // Template pour l'administration du plugin (consultation du résultat des importations)
    // --------------------------------------------------------------------------------
    public function admin_index() {
       require_once plugin_dir_path( __FILE__ ) . 'templates/admin.php';
    }
-   
+
    // --------------------------------------------------------------------------------
    // Template pour la configuration du plugin
    // --------------------------------------------------------------------------------
@@ -216,7 +216,7 @@ class cElohimNet
       if ( empty( $options ) || !empty( $compare_options ) ) {
           update_option( 'elohimnet_options', $merged_options );
       }
-   }   
+   }
 
    // -------------------------------------------------------
    // Écrire un commentaire dans le log
@@ -227,7 +227,7 @@ class cElohimNet
       $log_data = array();
 		$log_data['id_import'] = $this->id_import;
 		$log_data['comment'] = $comment;
-      
+
       $format_data = array();
       $format_data = '%d';
       $format_data = '%s';
@@ -291,7 +291,7 @@ class cElohimNet
 		$import_data['nb_new'] = 0;
 		$import_data['nb_deleted'] = 0;
       $import_data['nb_updated'] = 0;
-      
+
       $format_data = array();
       $format_data = '%d';
       $format_data = '%d';
@@ -329,18 +329,18 @@ class cElohimNet
       }
 
       $inactive = $wpdb->get_var(  "Select count(*)
-                                    From 
+                                    From
                                        wp_mailpoet_subscribers sub
                                        Join wp_mailpoet_subscriber_segment seg
-                                       on seg.subscriber_id = sub.id 
+                                       on seg.subscriber_id = sub.id
                                     Where seg.segment_id in (" . $list . ")
                                       And sub.status = 'inactive'");
 
       $active = $wpdb->get_var(      "Select count(distinct sub.email)
-                                      From 
+                                      From
                                          wp_mailpoet_subscribers sub
                                          Join wp_mailpoet_subscriber_segment seg
-                                         on seg.subscriber_id = sub.id 
+                                         on seg.subscriber_id = sub.id
                                       Where seg.segment_id in (" . $list . ")
                                         And seg.status = 'subscribed'
                                         And sub.status = 'subscribed'");
@@ -367,7 +367,7 @@ class cElohimNet
 
       $import_email_data = array();
 		$import_email_data['id_import'] = $this->id_import;
-      $import_email_data['email'] = utf8_encode($item->email); 
+      $import_email_data['email'] = utf8_encode($item->email);
 		$import_email_data['language'] = utf8_encode($item->language);
 		$import_email_data['type'] = utf8_encode($item->type);
 		$import_email_data['firstname'] = utf8_encode($item->firstname);
@@ -396,10 +396,10 @@ class cElohimNet
 		$email_data['datestamp'] = utf8_encode($item->datestamp);
       $email_data['FollowStatus'] = utf8_encode($item->followupstatus);
 
-      $row = $wpdb->insert( 'elohimnet_import_email', $import_email_data ); 
+      $row = $wpdb->insert( 'elohimnet_import_email', $import_email_data );
 
       if ( $row == 1) {
-         $wpdb->replace( 'elohimnet_email_data', $email_data ); 
+         $wpdb->replace( 'elohimnet_email_data', $email_data );
       } else {
          return 'duplicate';
       }
@@ -408,7 +408,7 @@ class cElohimNet
    }
 
    // --------------------------------------------------------------------------------
-   // Insérer dans la table insert_import_email_list toutes les listes associées à 
+   // Insérer dans la table insert_import_email_list toutes les listes associées à
    // chaque email sauf la liste 'International Mailouts'
    // --------------------------------------------------------------------------------
    function insert_import_email_list( $item ) {
@@ -448,13 +448,13 @@ class cElohimNet
          $url = '';
 
          switch ( $options['country'] ) {
-            case 'ca' : 
+            case 'ca' :
                $url = $this->url_ca;
                break;
-            case 'mx' : 
+            case 'mx' :
                $url = $this->url_mx;
                break;
-            case 'us' : 
+            case 'us' :
                $url = $this->url_us;
                break;
          }
@@ -498,7 +498,7 @@ class cElohimNet
       global $wpdb;
 
       $wpdb->query("CALL SP_CompareImport()");
-   
+
       $this->elohimnet_log( 'CompareImport: SP_CompareImport completed ' );
    }
 
@@ -507,11 +507,11 @@ class cElohimNet
    // ----------------------------------------------------------------------------------------------
    function process_new() {
       global $wpdb;
-      
+
       $options = get_option( 'elohimnet_options', array() );
-   
+
       $query = "SELECT ed.email, ed.firstname, ed.lastname, ed.language FROM elohimnet_import_new n JOIN elohimnet_email_data ed ON ed.email = n.email WHERE n.id_import in (SELECT max(id_import) FROM elohimnet_import)";
-   
+
       $allNew = $wpdb->get_results( $query, ARRAY_A );
 
       if ( $allNew ) {
@@ -523,13 +523,13 @@ class cElohimNet
                'schedule_welcome_email' => false   // default: true
             );
 
-            foreach ( $allNew as $new ) { 
+            foreach ( $allNew as $new ) {
                $subscriber_data = array(
                   'email' => $new['email'],
                   'first_name' => $new['firstname'],
                   'last_name' => $new['lastname']
                );
-               
+
                $list = '';
 
                switch ( $options['country']) {
@@ -562,7 +562,7 @@ class cElohimNet
                      $this->elohimnet_log( 'process_new: duplicate ' . $new['email'] );
                   }
                }
-          
+
                if ( ( $b_OK ) && ( $this->id_import > 1 ) ) {
                   $segment_data = array();
                   $segment_data['subscriber_id'] = $subscriber['id'];
@@ -591,13 +591,13 @@ class cElohimNet
    // ----------------------------------------------------------------------------------
    function process_update() {
       global $wpdb;
-      
+
       $query = "SELECT ed.email, ed.firstname, ed.lastname FROM elohimnet_import_updated u JOIN elohimnet_email_data ed ON ed.email = u.email WHERE u.id_import in (SELECT max(id_import) FROM elohimnet_import)";
-   
+
       $allUpdated = $wpdb->get_results( $query, ARRAY_A );
 
       if ( $allUpdated ) {
-         foreach ( $allUpdated as $update ) { 
+         foreach ( $allUpdated as $update ) {
             $data = array();
             $data['first_name'] = $update['firstname'];
             $data['last_name'] = $update['lastname'];
@@ -613,22 +613,22 @@ class cElohimNet
    }
 
    // ----------------------------------------------------------------------------
-   // Unsubscribe if option 
+   // Unsubscribe if option
    // ----------------------------------------------------------------------------
    function process_unsubscribe() {
       global $wpdb;
 
       $options = get_option( 'elohimnet_options', array() );
-      
+
       $query = "SELECT ed.email, ed.firstname, ed.lastname FROM elohimnet_import_deleted d JOIN elohimnet_email_data ed ON ed.email = d.email WHERE d.id_import in (SELECT max(id_import) FROM elohimnet_import)";
-   
+
       $allDeleted = $wpdb->get_results( $query, ARRAY_A );
 
       if ( $allDeleted ) {
          if (class_exists(\MailPoet\API\API::class)) {
             $mailpoet_api = \MailPoet\API\API::MP('v1');
 
-            foreach ( $allDeleted as $delete ) { 
+            foreach ( $allDeleted as $delete ) {
                $list = '';
 
                switch ( $options['country']) {
@@ -697,7 +697,7 @@ class cElohimNet
       $query = 'SELECT id_import, date_extraction, nb_import, nb_valid, nb_new, nb_deleted, nb_updated, nb_bad, nb_unsub_returned, nb_unsub_returned_refused, nb_mailpoet_inactive, nb_mailpoet_active FROM elohimnet_import ORDER BY id_import DESC LIMIT 1';
       $imports = $wpdb->get_results( $query, ARRAY_A );
 
-      foreach ( $imports as $import ) { 
+      foreach ( $imports as $import ) {
          $to = $options['email_report'];
          $subject = $options['country'] . ' - Import report';
          $body =  'ID: ' . $import['id_import'] . '\r\n' .
@@ -711,11 +711,11 @@ class cElohimNet
                   'Unsubscribers returned to Elohim.net: ' . $import['nb_unsub_returned'] . '\r\n' .
                   'Unsubscribers refused by Elohim.net: ' . $import['nb_unsub_returned_refused'] . '\r\n' .
                   'Inactive in Mailpoet: ' . $import['nb_mailpoet_inactive'] . '\r\n' .
-                  'Real subscriptions in Mailpoet: ' . $import['nb_mailpoet_active'] . '\r\n'; 
+                  'Real subscriptions in Mailpoet: ' . $import['nb_mailpoet_active'] . '\r\n';
 
          $headers = array('Content-Type: text/html; charset=UTF-8');
-         
-         wp_mail( $to, $subject, $body, $headers );      
+
+         wp_mail( $to, $subject, $body, $headers );
       }
 
       $this->elohimnet_log( 'send_report: completed' );
@@ -768,7 +768,7 @@ class cElohimNet
       $retour = true;
 
       $query = 'SELECT * FROM elohimnet_import_new WHERE id_import = ' . $this->id_import;
-   
+
       $news = $wpdb->get_results( $query, ARRAY_A );
 
       if ( $news ) {
@@ -776,7 +776,7 @@ class cElohimNet
       }
 
       $query = 'SELECT * FROM elohimnet_import_updated WHERE id_import = ' . $this->id_import;
-   
+
       $Updated = $wpdb->get_results( $query, ARRAY_A );
 
       if ( $Updated ) {
@@ -784,7 +784,7 @@ class cElohimNet
       }
 
       $query = 'SELECT * FROM elohimnet_import_deleted WHERE id_import = ' . $this->id_import;
-   
+
       $deleted = $wpdb->get_results( $query, ARRAY_A );
 
       if ( $deleted ) {
@@ -804,7 +804,7 @@ class cElohimNet
       $retour = true;
 
       $query = 'SELECT * FROM elohimnet_unsubscribers_return_to_elohim_net WHERE id_import = ' . $this->id_import;
-   
+
       $results = $wpdb->get_results( $query, ARRAY_A );
 
       if ( $results ) {
@@ -885,4 +885,3 @@ if (class_exists ( 'cElohimNet' ) ) {
    $oElohimNet->register_action();
 
 }
-
