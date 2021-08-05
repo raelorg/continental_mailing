@@ -58,7 +58,7 @@
     <li><strong>New:</strong> Number of new emails since the last import</li>
     <li><strong>Unsubscribed:</strong> Number of emails unsubscribed in Elohim.net since the last import. If the 'Deal with unsubscriptions' option is YES, the email is unsubscribed also in Mailpoet.</li>
     <li><strong>Updated:</strong> Number of emails whose basic information to change since the last import (last name, first name, etc.)</li>
-    <li><strong>Unsubscriptions to send to Elohim.net:</strong> Number of unsubscriptions or spam that occurred in Mailpoet which must be returned to Elohim.net for synchronization purposes.</li>
+    <li><strong>Unsubscrivers to send to Elohim.net:</strong> Number of unsubscriptions or spam that occurred in Mailpoet which must be returned to Elohim.net for synchronization purposes.</li>
     <li><strong>Unsubscribed not applied in Elohim.net.:</strong> Number of unsubscriptions returned to Elohim.net that were not applied. An unsubscription is refused by Elohim.net when it comes to a member who is in the structures. Take note that some emails are subscribed again in Elohim.net even after having unsubscribed in Mailpoet. To respect the choice of the person, the email remains unsubscribed in Mailpoet.</li>
     <li><strong>Bounced, Invalid & Unsubscribed in Mailpoet: Unsubscribe in Mailpoet. </strong> It can be bad or invalid emails detected by www.datavalidation.com. It can also be bounced emails without good status or emails moved to one list to another. Note that this data is approximate.</li>
     <li><strong>Inactive in Mailpoet:</strong> If the 'Stop sending to inactive subscribers' option of Mailpoet is used, shows the number of emails that have been rendered inactive by Mailpoet after 6 months.</li>

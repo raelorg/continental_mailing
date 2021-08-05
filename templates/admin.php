@@ -53,7 +53,7 @@ if ( 'resume' == $_GET['id_import'] ) {
 // Afficher le tableau des importations
 // ---------------------------------------------------------------
 if ( ( ! isset( $_GET['id_import'] ) ) || ( 'resume' == $_GET['id_import'] ) ) {
-    $query = 'select id_import, date_extraction, nb_import, nb_valid, nb_new, nb_deleted, nb_updated, nb_bad, nb_unsub_returned, nb_unsub_returned_refused, nb_mailpoet_inactive, nb_mailpoet_active from elohimnet_import order by id_import desc';
+    $query = 'select id_import, date_extraction, nb_import, nb_valid, nb_new, nb_deleted, nb_updated, nb_bad, nb_unsub_returned, nb_unsub_returned_refused, nb_mailpoet_inactive, nb_mailpoet_active from elohimnet_import order by id_import desc limit 20';
     $imports = $wpdb->get_results( $query, ARRAY_A );
     ?>
 
@@ -71,7 +71,7 @@ if ( ( ! isset( $_GET['id_import'] ) ) || ( 'resume' == $_GET['id_import'] ) ) {
                 <th>New</th>
                 <th>Unsubscribed</th>
                 <th>Updated</th>
-                <th>Unsubscriptions to send to Elohim.net</th>
+                <th>Unsubscribers to send to Elohim.net</th>
                 <th><?php echo '<a href="' . $url_refused . '">'?>Unsubscribers not applied by Elohim.net</th>
                 <th><?php echo '<a href="' . $url_bad . '">'?>Bounced, Invalid & Unsubscribed in Mailpoet</th>
                 <th><?php echo '<a href="' . $url_inactive . '">'?>Inactive in Mailpoet</th>

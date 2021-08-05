@@ -68,7 +68,7 @@ $options = get_option( 'elohimnet_options', array() );
     <h2>Schedule</h2>
     <table>
         <tr>
-            <td>Day of execution (0 to deactivate)</td>
+            <td>Day of execution (let empty to deactivate)</td>
             <td><input type="text" name="elohimnet_cron" value="<?php echo esc_html( $options['elohimnet_cron'] ); ?>" maxlength="1" size="1"/></td>
         </tr>
         <tr>
