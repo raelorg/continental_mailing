@@ -108,10 +108,12 @@ class cElohimNet
       // 6 -> Saturday
       $dayofweek = date('w') + 1;
 
-      if ( $dayofweek == $options['elohimnet_cron'] ) {
-         $this->import();
-      } else {
-         $this->resume(); // Nécessaire pour USA car plusieurs reprises sont nécessaires
+      if ( $dayofweek != '' ) {
+         if ( $dayofweek == $options['elohimnet_cron'] ) {
+            $this->import();
+         } else {
+            $this->resume(); // Nécessaire pour USA car plusieurs reprises sont nécessaires
+         }
       }
    }
 
