@@ -215,7 +215,7 @@ class cDatabase {
                     actuel.id_import = id_actuel
                 And precedent.email is null
                 And actuel.FollowStatus Not in ('Email bounced','Not interested')
-                And actuel.type in ('M','S','R','P','XM','XR','XS')
+                And actuel.type in ('M','S','R','P','XM','XR','XS','SU','X','RH')
                 ) as nouveau;
         
             Insert into elohimnet_import_deleted (id_import, email)
@@ -233,7 +233,7 @@ class cDatabase {
                     precedent.id_import = id_precedent
                 And actuel.email is null
                 And precedent.FollowStatus Not in ('Email bounced','Not interested')
-                And precedent.type in ('M','S','R','P','XM','XR','XS')
+                And precedent.type in ('M','S','R','P','XM','XR','XS','SU','X','RH')
             ) as deleted;
         
             Insert into elohimnet_import_updated (id_import, email)
@@ -258,9 +258,9 @@ class cDatabase {
                     Or (actuel.transmission <> precedent.transmission)
                     Or (actuel.FollowStatus <> precedent.FollowStatus) )
                     And precedent.FollowStatus Not in ('Email bounced','Not interested')
-                    And precedent.type in ('M','S','R','P','XM','XR','XS')
+                    And precedent.type in ('M','S','R','P','XM','XR','XS','SU','X','RH')
                     And actuel.FollowStatus Not in ('Email bounced','Not interested')
-                    And actuel.type in ('M','S','R','P','XM','XR','XS')
+                    And actuel.type in ('M','S','R','P','XM','XR','XS','SU','X','RH')
                     And precedent.id_import = id_precedent
                     And actuel.id_import = id_actuel;
                    
@@ -301,7 +301,7 @@ class cDatabase {
                   on iel.id_import = ie.id_import
             Where
                 ie.FollowStatus Not in ('Email bounced','Not interested')
-            And ie.type in ('M','S','R','P','XM','XR','XS')
+            And ie.type in ('M','S','R','P','XM','XR','XS','SU','X','RH')
             And ie.id_import = id_actuel;
         END
         ";
@@ -363,7 +363,7 @@ class cDatabase {
             WHERE 
                 ie.id_import = id_actuel 
             AND ie.FollowStatus Not in ('Email bounced','Not interested')
-            AND ie.type in ('M','S','R','P','XM','XR','XS')
+            AND ie.type in ('M','S','R','P','XM','XR','XS','SU','X','RH')
             AND EXISTS (SELECT * FROM elohimnet_import_email_list iel WHERE iel.id_import = ie.id_import) 
             INTO n_valid;
 
@@ -387,7 +387,7 @@ class cDatabase {
                 elohimnet_unsubscribers_return_to_elohim_net ret 
                 JOIN elohimnet_import_email ie on ie.email = ret.email
             WHERE ie.FollowStatus Not in ('Email bounced','Not interested')
-              AND ie.type in ('M','S','R','P','XM','XR','XS')
+              AND ie.type in ('M','S','R','P','XM','XR','XS','SU','X','RH')
               AND ie.id_import = id_actuel
             INTO n_unsub_returned_refused;
 
@@ -428,7 +428,7 @@ class cDatabase {
                   on iel.id_import = ie.id_import
             Where
                 ie.FollowStatus Not in ('Email bounced','Not interested')
-            And ie.type in ('M','S','R','P','XM','XR','XS');
+            And ie.type in ('M','S','R','P','XM','XR','XS','SU','X','RH');
         END
         ";
 
