@@ -27,6 +27,9 @@
         <li><strong>XM</strong>: Ex-Member</li>
         <li><strong>XR</strong>: Ex-Raelian</li>
         <li><strong>XS</strong>: Ex-Structure</li>
+        <li><strong>SU</strong>: Suspended (Disciplinary)</li>
+        <li><strong>XS</strong>: Expelled (Disciplinary)</li>
+        <li><strong>XS</strong>: Retired-Honorary</li>
     </ul>
     <li>The status associated with the email must not be one of the following values:</li>
     <ul class="boulette2">

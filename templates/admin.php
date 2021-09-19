@@ -122,8 +122,8 @@ if ( ( isset( $_GET['id_import'] ) ) && ( is_numeric( $_GET['id_import'] ) ) && 
     <table class="wp-list-table widefat fixed">
         <thead>
             <tr>
-                <th style="width: 20px">Id</th>
-                <th style="width: 100px">Date</th>
+                <th style="width: 30px">Id</th>
+                <th style="width: 150px">Date</th>
                 <th style="width: 500px">Comment</th>
             </tr>
         </thead>
@@ -162,7 +162,7 @@ if ( ( isset( $_GET['id_import'] ) ) && ( is_numeric( $_GET['id_import'] ) ) && 
     <table class="wp-list-table widefat fixed">
         <thead>
             <tr>
-                <th style="width: 20px">Id</th>
+                <th style="width: 30px">Id</th>
                 <th>Email</th>
                 <th>Language</th>
                 <th>Type</th>
@@ -222,7 +222,7 @@ if ( ( isset( $_GET['id_import'] ) ) && ( is_numeric( $_GET['id_import'] ) ) && 
     <table class="wp-list-table widefat fixed">
         <thead>
             <tr>
-                <th style="width: 20px">Id</th>
+                <th style="width: 30px">Id</th>
                 <th>Email</th>
                 <th>Language</th>
                 <th>Type</th>
@@ -282,7 +282,7 @@ if ( ( isset( $_GET['id_import'] ) ) && ( is_numeric( $_GET['id_import'] ) ) && 
     <table class="wp-list-table widefat fixed">
         <thead>
             <tr>
-                <th style="width: 20px">Id</th>
+                <th style="width: 30px">Id</th>
                 <th>Email</th>
                 <th>Language</th>
                 <th>Type</th>
@@ -342,7 +342,7 @@ if ( ( isset( $_GET['id_import'] ) ) && ( is_numeric( $_GET['id_import'] ) ) && 
     <table class="wp-list-table widefat fixed">
         <thead>
             <tr>
-                <th style="width: 20px">Id</th>
+                <th style="width: 30px">Id</th>
                 <th>Email</th>
                 <th>Language</th>
                 <th>Type</th>
@@ -402,7 +402,7 @@ if ( ( isset( $_GET['id_import'] ) ) && ( is_numeric( $_GET['id_import'] ) ) && 
     <table class="wp-list-table widefat fixed">
         <thead>
             <tr>
-                <th style="width: 20px">Id</th>
+                <th style="width: 30px">Id</th>
                 <th>Email</th>
                 <th>Language</th>
                 <th>Type</th>
@@ -486,7 +486,7 @@ if ( ( isset( $_GET['tag']) ) && ( $_GET['tag'] === 'bad' ) ) {
     <table class="wp-list-table widefat fixed">
         <thead>
             <tr>
-                <th style="width: 20px">Id</th>
+                <th style="width: 30px">Id</th>
                 <th>Email</th>
                 <th>Language</th>
                 <th>Type</th>
@@ -552,7 +552,7 @@ if ( ( isset( $_GET['id_import'] ) ) && ( is_numeric( $_GET['id_import'] ) ) && 
     <table class="wp-list-table widefat fixed">
         <thead>
             <tr>
-                <th style="width: 20px">Id</th>
+                <th style="width: 30px">Id</th>
                 <th>Email</th>
                 <th>Language</th>
                 <th>Type</th>
@@ -607,7 +607,7 @@ if ( ( isset( $_GET['tag']) ) && ( $_GET['tag'] === 'refused' ) ) {
                         JOIN elohimnet_import_email ie on ie.email = ret.email
                         JOIN elohimnet_email_data d on d.email = ret.email
                     WHERE ie.FollowStatus Not in ('Email bounced','Not interested')
-                    AND ie.type in ('M','S','R','P','XM','XR','XS')
+                    AND ie.type in ('M','S','R','P','XM','XR','XS','SU','X','RH')
                     AND ie.id_import = (SELECT MAX(id_import) From elohimnet_import)
                 ORDER BY d.email";
 
