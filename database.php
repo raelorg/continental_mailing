@@ -86,6 +86,20 @@ class cDatabase {
         dbDelta( $query );
     }
 
+    function create_elohimnet_import_inactive() {
+        global $wpdb;
+
+        $charset_collate = $wpdb->get_charset_collate();
+
+        $query = "CREATE TABLE IF NOT EXISTS `elohimnet_import_inactive` (
+                `id_import` int(11) NOT NULL,
+                `email` varchar(100) NOT NULL,
+                PRIMARY KEY (`id_import`,`email`)
+          ) $charset_collate;";
+
+        dbDelta( $query );
+    }
+
     function create_elohimnet_import_new() {
         global $wpdb;
 
@@ -469,6 +483,33 @@ class cDatabase {
         $wpdb->query( $query );
     }
 
+    function create_SP_inactive() {
+        global $wpdb;
+
+        $query = "
+        DROP PROCEDURE IF EXISTS `SP_inactive`;
+        ";
+
+        $wpdb->query( $query );
+
+        $query = "
+        CREATE PROCEDURE `SP_inactive` ()  NO SQL
+        BEGIN
+            DECLARE id_actuel INT;
+            
+            SELECT MAX(id_import) From elohimnet_import INTO id_actuel;
+
+            INSERT INTO elohimnet_import_inactive (id_import, email)
+            SELECT id_actuel, mp.email 
+            FROM wp_mailpoet_subscribers mp
+            WHERE mp.status = 'inactive'
+            AND NOT EXISTS (SELECT DISTINCT i.email FROM elohimnet_import_inactive i WHERE i.email = mp.email);
+        END 
+        ";
+
+        $wpdb->query( $query );
+    }
+
     // Trigger non actif. Je le garde comme exemple.
     function create_U_elohimnet_import() {
         global $wpdb;
@@ -515,6 +556,7 @@ class cDatabase {
         $this->create_elohimnet_email_data();
         $this->create_elohimnet_valid_email();
         $this->create_elohimnet_log();
+        $this->create_elohimnet_import_inactive();
     }
 
     public function create_stored_procedure() {
@@ -523,6 +565,7 @@ class cDatabase {
         $this->create_SP_UpdateImport();
         $this->create_SP_LoadValidEmail();
         $this->create_SP_unsubscribers_to_Elohimnet();
+        $this->create_SP_inactive();
     }
 
 }

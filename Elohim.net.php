@@ -50,6 +50,7 @@ class cElohimNet
       $this->id_import = 0;
       $this->first_import = false;
       $this->elohimnet_cron = 'elohimnet_cron';
+      $this->inactive_cron = 'inactive_cron';
 
       $this->plugin = plugin_basename( __FILE__ );
    }
@@ -59,24 +60,27 @@ class cElohimNet
    // --------------------------------------------------------------------------------
 	public function register_action() {
       register_activation_hook( __FILE__, array( $this, 'plugin_activate' ) );
-      register_activation_hook( __FILE__, array( $this, 'cron_activation' ) );
+      register_activation_hook( __FILE__, array( $this, 'cron_activation_elohimnet' ) );
+      register_activation_hook( __FILE__, array( $this, 'cron_activation_inactive' ) );
 
       register_deactivation_hook( __FILE__, array ( $this, 'plugin_deactivate' ) );
-      register_deactivation_hook(__FILE__, array ( $this, 'cron_deactivation' ) );
+      register_deactivation_hook(__FILE__, array ( $this, 'cron_deactivation_elohimnet' ) );
+      register_deactivation_hook(__FILE__, array ( $this, 'cron_deactivation_inactive' ) );
 
       register_uninstall_hook( __FILE__, 'plugin_uninstall' );
 
       add_action( 'admin_menu', array ( $this, 'add_admin_pages' ) );
       add_action( 'do_import', array( $this, 'import' ) );
       add_action( 'do_resume', array( $this, 'resume' ) );
-      add_action( $this->elohimnet_cron, array( $this, 'cron_execution' ) );
+      add_action( $this->elohimnet_cron, array( $this, 'cron_execution_elohimnet' ) );
+      add_action( $this->inactive_cron, array( $this, 'cron_execution_inactive' ) );
       add_action( 'do_save_settings', array( $this, 'save_settings') );
    }
 
    // ---------------------------------------------------------
    // Schedule elohimnet_cron task
    // ---------------------------------------------------------
-   public function cron_activation()
+   public function cron_activation_elohimnet()
    {
       if ( wp_next_scheduled( $this->elohimnet_cron ) ) {
          wp_clear_scheduled_hook( $this->elohimnet_cron );
@@ -87,17 +91,38 @@ class cElohimNet
    }
 
    // ---------------------------------------------------------
+   // Schedule inactive_cron task
+   // ---------------------------------------------------------
+   public function cron_activation_inactive()
+   {
+      if ( wp_next_scheduled( $this->inactive_cron ) ) {
+         wp_clear_scheduled_hook( $this->inactive_cron );
+      }
+
+      // Forcer le démarrage une heure plus tard
+      wp_schedule_event(time() + (1 * 1 * 60 * 60), 'hourly', $this->inactive_cron );
+   }
+
+   // ---------------------------------------------------------
    // Clear elohimnet_cron task
    // ---------------------------------------------------------
-   public function cron_deactivation()
+   public function cron_deactivation_elohimnet()
    {
       wp_clear_scheduled_hook( $this->elohimnet_cron );
    }
 
    // ---------------------------------------------------------
+   // Clear inactive_cron task
+   // ---------------------------------------------------------
+   public function cron_deactivation_inactive()
+   {
+      wp_clear_scheduled_hook( $this->inactive_cron );
+   }
+
+   // ---------------------------------------------------------
    // elohimnet_cron task execution
    // ---------------------------------------------------------
-   public function cron_execution()
+   public function cron_execution_elohimnet()
    {
       $options = get_option( 'elohimnet_options', array() );
 
@@ -115,6 +140,15 @@ class cElohimNet
             $this->resume(); // Nécessaire pour USA car plusieurs reprises sont nécessaires
          }
       }
+   }
+
+   // ---------------------------------------------------------
+   // elohimnet_cron task execution
+   // ---------------------------------------------------------
+   public function cron_execution_inactive()
+   {
+      $this->unsubscriber_report();
+      $this->inactive_report();
    }
 
    // --------------------------------------------------------------------------------
@@ -149,7 +183,8 @@ class cElohimNet
    public function plugin_deactivate() {
       flush_rewrite_rules();
 
-      $this->cron_deactivation();
+      $this->cron_deactivation_elohimnet();
+      $this->cron_deactivation_inactive();
    }
 
    public function add_admin_pages() {
@@ -504,6 +539,16 @@ class cElohimNet
       $this->elohimnet_log( 'CompareImport: SP_CompareImport completed ' );
    }
 
+   // ---------------------------------------------------------------------------------------------
+   // Détecter les nouveaux inactifs
+   // ---------------------------------------------------------------------------------------------
+   function process_inactive() {
+      global $wpdb;
+
+      $wpdb->query("CALL SP_inactive()");
+
+   }
+
    // ----------------------------------------------------------------------------------------------
    // Add all new subscribers in the proper list
    // ----------------------------------------------------------------------------------------------
@@ -696,32 +741,292 @@ class cElohimNet
 
       $options = get_option( 'elohimnet_options', array() );
 
+      $site = '';
+
+      switch ( $options['country']) {
+         case 'ca':
+            $site = 'www.raelcanada.org';
+            break;
+         case 'mx':
+            $site = 'www.raelmexico.org';
+            break;
+         case 'us':
+            $site = 'www.raelusa.org';
+            break;
+      }
+
       $query = 'SELECT id_import, date_extraction, nb_import, nb_valid, nb_new, nb_deleted, nb_updated, nb_bad, nb_unsub_returned, nb_unsub_returned_refused, nb_mailpoet_inactive, nb_mailpoet_active FROM elohimnet_import ORDER BY id_import DESC LIMIT 1';
       $imports = $wpdb->get_results( $query, ARRAY_A );
 
       foreach ( $imports as $import ) {
          $to = $options['email_report'];
          $subject = $options['country'] . ' - Import report';
-         $body =  'ID: ' . $import['id_import'] . '\r\n' .
-                  'Date: ' . $import['date_extraction'] . '\r\n' .
-                  'Imported: ' . $import['nb_import'] . '\r\n' .
-                  'Valid: ' . $import['nb_valid'] . '\r\n' .
-                  'New: ' . $import['nb_new'] . '\r\n' .
-                  'Deleted: ' . $import['nb_deleted'] . '\r\n' .
-                  'Updated: ' . $import['nb_updated'] . '\r\n' .
-                  'Bad: ' . $import['nb_bad'] . '\r\n' .
-                  'Unsubscribers returned to Elohim.net: ' . $import['nb_unsub_returned'] . '\r\n' .
-                  'Unsubscribers refused by Elohim.net: ' . $import['nb_unsub_returned_refused'] . '\r\n' .
-                  'Inactive in Mailpoet: ' . $import['nb_mailpoet_inactive'] . '\r\n' .
-                  'Real subscriptions in Mailpoet: ' . $import['nb_mailpoet_active'] . '\r\n';
+         $body =  
 
-         $headers = array('Content-Type: text/html; charset=UTF-8');
+         '<p>Hello,</p>
+         <p>Please DO NOT reply to this email, it is a <strong>notification</strong> from ' . $site . ' to inform you that the import of new contacts from Elohim.net is complete.</p>
+                  <table width="100%" border="0" cellpadding="5" cellspacing="0" bgcolor="#FFFFFF">
+                     <tbody>
+                        <tr bgcolor="#EAF2FA">
+                           <td colspan="2"><font style="font-family:sans-serif; font-size:12px"><strong>ID</strong></font> </td>
+                        </tr>
+                        <tr bgcolor="#FFFFFF">
+                           <td width="20">&nbsp;</td>
+                           <td><font style="font-family:sans-serif; font-size:12px">tag_ID</font> </td>
+                        </tr>
+                        <tr bgcolor="#EAF2FA">
+                           <td colspan="2"><font style="font-family:sans-serif; font-size:12px"><strong>Date</strong></font> </td>
+                        </tr>
+                        <tr bgcolor="#FFFFFF">
+                           <td width="20">&nbsp;</td>
+                           <td><font style="font-family:sans-serif; font-size:12px">tag_date</font> </td>
+                        </tr>
+                        <tr bgcolor="#EAF2FA">
+                           <td colspan="2"><font style="font-family:sans-serif; font-size:12px"><strong>Imported</strong></font> </td>
+                        </tr>
+                        <tr bgcolor="#FFFFFF">
+                           <td width="20">&nbsp;</td>
+                           <td><font style="font-family:sans-serif; font-size:12px">tag_imported</a></font> </td>
+                        </tr>
+                        <tr bgcolor="#EAF2FA">
+                           <td colspan="2"><font style="font-family:sans-serif; font-size:12px"><strong>Valid</strong></font> </td>
+                        </tr>
+                        <tr bgcolor="#FFFFFF">
+                           <td width="20">&nbsp;</td>
+                           <td><font style="font-family:sans-serif; font-size:12px">tag_valid</font> </td>
+                        </tr>
+                        <tr bgcolor="#EAF2FA">
+                           <td colspan="2"><font style="font-family:sans-serif; font-size:12px"><strong>New</strong></font> </td>
+                        </tr>
+                        <tr bgcolor="#FFFFFF">
+                           <td width="20">&nbsp;</td>
+                           <td><font style="font-family:sans-serif; font-size:12px">tag_new</font> </td>
+                        </tr>
+                        <tr bgcolor="#EAF2FA">
+                           <td colspan="2"><font style="font-family:sans-serif; font-size:12px"><strong>Unsubscribed</strong></font> </td>
+                        </tr>
+                        <tr bgcolor="#FFFFFF">
+                           <td width="20">&nbsp;</td>
+                           <td><font style="font-family:sans-serif; font-size:12px">tag_unsubscribed</font> </td>
+                        </tr>
+                        <tr bgcolor="#EAF2FA">
+                           <td colspan="2"><font style="font-family:sans-serif; font-size:12px"><strong>Updated</strong></font> </td>
+                        </tr>
+                        <tr bgcolor="#FFFFFF">
+                           <td width="20">&nbsp;</td>
+                           <td><font style="font-family:sans-serif; font-size:12px">tag_updated</font> </td>
+                        </tr>
+                        <tr bgcolor="#EAF2FA">
+                           <td colspan="2"><font style="font-family:sans-serif; font-size:12px"><strong>Bad</strong></font> </td>
+                        </tr>
+                        <tr bgcolor="#FFFFFF">
+                           <td width="20">&nbsp;</td>
+                           <td><font style="font-family:sans-serif; font-size:12px">tag_bad</font> </td>
+                        </tr>
+                        <tr bgcolor="#EAF2FA">
+                           <td colspan="2"><font style="font-family:sans-serif; font-size:12px"><strong>Unsubscribers returned to Elohim.net</strong></font> </td>
+                        </tr>
+                        <tr bgcolor="#FFFFFF">
+                           <td width="20">&nbsp;</td>
+                           <td><font style="font-family:sans-serif; font-size:12px">tag_unsubscribers_returned_to_elohim_net</font> </td>
+                        </tr>
+                        <tr bgcolor="#EAF2FA">
+                           <td colspan="2"><font style="font-family:sans-serif; font-size:12px"><strong>Unsubscribers refused by Elohim.net</strong></font> </td>
+                        </tr>
+                        <tr bgcolor="#FFFFFF">
+                           <td width="20">&nbsp;</td>
+                           <td><font style="font-family:sans-serif; font-size:12px">tag_unsubscribers_refused_by_elohim_net</font> </td>
+                        </tr>
+                        <tr bgcolor="#EAF2FA">
+                           <td colspan="2"><font style="font-family:sans-serif; font-size:12px"><strong>Inactive in Mailpoet</strong></font> </td>
+                        </tr>
+                        <tr bgcolor="#FFFFFF">
+                           <td width="20">&nbsp;</td>
+                           <td><font style="font-family:sans-serif; font-size:12px">tag_inactive_in_mailpoet</font> </td>
+                        </tr>
+                        <tr bgcolor="#EAF2FA">
+                           <td colspan="2"><font style="font-family:sans-serif; font-size:12px"><strong>Real subscriptions in Mailpoet</strong></font> </td>
+                        </tr>
+                        <tr bgcolor="#FFFFFF">
+                           <td width="20">&nbsp;</td>
+                           <td><font style="font-family:sans-serif; font-size:12px">tag_real_subscriptions_in_mailpoet</font> </td>
+                        </tr>
+                     </tbody>
+                  </table>';
 
-         wp_mail( $to, $subject, $body, $headers );
-      }
+      $body = str_replace('tag_ID', $import['id_import'], $body);
+      $body = str_replace('tag_date', $import['date_extraction'], $body);
+      $body = str_replace('tag_imported', $import['nb_import'], $body);
+      $body = str_replace('tag_valid', $import['nb_valid'], $body);
+      $body = str_replace('tag_new', $import['nb_new'], $body);
+      $body = str_replace('tag_unsubscribed', $import['nb_deleted'], $body);
+      $body = str_replace('tag_updated', $import['nb_updated'], $body);
+      $body = str_replace('tag_bad', $import['nb_bad'], $body);
+      $body = str_replace('tag_unsubscribers_returned_to_elohim_net', $import['nb_unsub_returned'], $body);
+      $body = str_replace('tag_unsubscribers_refused_by_elohim_net', $import['nb_unsub_returned_refused'], $body);
+      $body = str_replace('tag_inactive_in_mailpoet', $import['nb_mailpoet_inactive'], $body);
+      $body = str_replace('tag_real_subscriptions_in_mailpoet', $import['nb_mailpoet_active'], $body);
+
+      $headers = array('Content-Type: text/html; charset=UTF-8');
+
+      wp_mail( $to, $subject, $body, $headers );
 
       $this->elohimnet_log( 'send_report: completed' );
+      }
    }
+
+
+   // ----------------------------------------------------
+   // Rapport pour l'équipe Elohim.net
+   // ----------------------------------------------------
+   public function unsubscriber_report() {
+      global $wpdb;
+
+      $site = '';
+
+      $options = get_option( 'elohimnet_options', array() );
+
+      switch ( $options['country'] ) {
+         case 'ca':
+            $site = 'raelcanada.org';
+            break;
+         case 'mx':
+            $site = 'raelmexico.org';
+            break;
+         case 'us':
+            $site = 'raelusa.org';
+            break;
+      }
+
+      $query = "SELECT d.email, d.firstname, d.lastname, d.nickname, d.Followstatus
+      FROM
+          elohimnet_unsubscribers_return_to_elohim_net u
+          JOIN elohimnet_email_data d
+          on d.email = u.email
+          WHERE u.id_import = (SELECT max(id_import) FROM elohimnet_import) ORDER BY d.email";
+
+      $rows = $wpdb->get_results( $query, ARRAY_A );
+
+      $table = '';
+
+      if ( $rows ) {
+         foreach ( $rows as $row ) {
+            $table .= 
+            '<tr>
+               <td>' . $row['email'] . '</td>
+               <td>' . $row['firstname'] . '</td>
+               <td>' . $row['lastname'] . '</td>
+               <td>' . $row['nickname'] . '</td>
+               <td>' . $row['Followstatus'] . '</td>
+            </tr>';
+         } // foreach
+
+         $body =  
+         '<p>Hello, List manager!</p>
+         <p>Please DO NOT reply to this email, it is a <strong>notification</strong> from ' . $site . ' to inform you of the latest changes relating to unsubscriptions.</p>
+         <style>
+            table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+            }
+         </style>
+         <table>
+            <tr><th>Email</th><th>Firstname</th><th>Lastname</th><th>Nickname</th><th>Follow Status</th></tr>';
+
+         $table .= '</table>';
+
+         $body .= $table;
+         $headers = array('Content-Type: text/html; charset=UTF-8');
+         $subject = $site . ' - Unsubscriptions of the last week';
+
+         wp_mail( 'loukesir@outlook.com,meo_9jdp@yahoo.ca', $subject, $body, $headers );
+
+         $this->elohimnet_log( 'send_unsubscriber: completed' );
+      }
+   } // unsubscriber_report
+
+   // ----------------------------------------------------
+   // Rapport pour l'équipe IPT
+   // ----------------------------------------------------
+   public function inactive_report() {
+      global $wpdb;
+
+      $this->process_inactive();
+
+      $email = '';
+      $site = '';
+      $dev = '';
+
+      $options = get_option( 'elohimnet_options', array() );
+
+      switch ( $options['country'] ) {
+         case 'ca':
+            $email = 'loukesir@outlook.com,gabrielsylvain.bluteau@gmail.com,shanti99@gmail.com';
+            $site = 'raelcanada.org';
+            $dev = 'dev@raelcanada.org';
+            break;
+         case 'mx':
+            $email = 'loukesir@outlook.com,shanti99@gmail.com';
+            $site = 'raelmexico.org';
+            $dev = 'dev@raelmexico.org';
+            break;
+         case 'us':
+            $email = 'loukesir@outlook.com,shanti99@gmail.com';
+            $site = 'raelusa.org';
+            $dev = 'dev@raelusa.org';
+            break;
+      }
+
+      $query = 
+         "SELECT CASE WHEN ISNULL(elo.email) THEN 'No' Else 'Yes' END as elohim, i.email, mp.first_name, mp.last_name, mp.status, mp.updated_at
+         FROM
+            elohimnet_import_inactive i
+            JOIN wp_mailpoet_subscribers mp on mp.email = i.email
+            LEFT JOIN elohimnet_email_data elo on elo.email = mp.email
+         WHERE i.id_import = (SELECT max(id_import) FROM elohimnet_import) ORDER BY i.email";
+
+      $rows = $wpdb->get_results( $query, ARRAY_A );
+
+      $table = '';
+
+      if ( $rows ) {
+         foreach ( $rows as $row ) {
+            $table .= 
+            '<tr>
+               <td>' . $row['elohim'] . '</td>
+               <td>' . $row['email'] . '</td>
+               <td>' . $row['first_name'] . '</td>
+               <td>' . $row['last_name'] . '</td>
+               <td>' . $row['status'] . '</td>
+               <td>' . $row['updated_at'] . '</td>
+            </tr>';
+         } // foreach
+
+         $body =  
+         '<p>Hello, IPT manager!</p>
+         <p>Please DO NOT reply to this email, it is a <strong>notification</strong> from ' . $site . ' to inform you of the latest changes relating to inactive subscriptions.</p>
+         <p>What is an inactive subscription? A subscription becomes inactive when the contact has not opened any campaign for more than six months. At this time, the spam protection changes the status from Unsubscribed to Inactive and the contact no longer receives a campaign.</p>
+         <p>If you wish to have the complete list of inactive contacts for ' . $site . ', please send a request to <a href="mailto:' . $dev . '">' . $dev .  '</a></p>
+         <style>
+            table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+            }
+         </style>
+         <table>
+            <tr><th>Elohim.net?</th><th>Email</th><th>Firstname</th><th>Lastname</th><th>Status</th><th>Updated at</th></tr>';
+
+         $table .= '</table>';
+
+         $body .= $table;
+         $headers = array('Content-Type: text/html; charset=UTF-8');
+         $subject = $site . ' - Inactive subscriptions of the last week';
+
+         wp_mail( $email, $subject, $body, $headers );
+
+         $this->elohimnet_log( 'send_inactive: completed' );
+      }
+   } // inactive_report
 
    // --------------------------------------------------------------------------------
    // Lancer une importation
@@ -873,10 +1178,10 @@ class cElohimNet
       $weekday = array(1,2,3,4,5,6,7);
 
       if ( in_array( $options['elohimnet_cron'], $weekday ) ) {
-         $this->cron_deactivation();
-         $this->cron_activation();
+         $this->cron_deactivation_elohimnet();
+         $this->cron_activation_elohimnet();
       } else {
-         $this->cron_deactivation();
+         $this->cron_deactivation_elohimnet();
       }
    }
 }
