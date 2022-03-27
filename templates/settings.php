@@ -53,11 +53,11 @@ $options = get_option( 'elohimnet_options', array() );
         </tr>
     </table>
 
-    <h2>Churn</h2>
+    <h2>Unsubscribe</h2>
 
     <table>
         <tr>
-            <td>Deal with unsubscriptions?</td>
+            <td>Automatique?</td>
             <td>
                 <input type="radio" name="unsubscribe" value="no"  <?php echo ('no'  === $options['unsubscribe'] ? 'checked' : ''); ?>> No
                 <input type="radio" name="unsubscribe" value="yes" <?php echo ('yes' === $options['unsubscribe'] ? 'checked' : ''); ?>> Yes
@@ -72,8 +72,16 @@ $options = get_option( 'elohimnet_options', array() );
             <td><input type="text" name="elohimnet_cron" value="<?php echo esc_html( $options['elohimnet_cron'] ); ?>" maxlength="1" size="1"/></td>
         </tr>
         <tr>
-            <td>Send report to </td>
-            <td><input type="text" name="email_report" value="<?php echo esc_html( $options['email_report'] ); ?>" maxlength="128" size="50"/></td>
+            <td>Send import report to </td>
+            <td><input type="text" name="email_report" value="<?php echo esc_html( $options['email_report'] ); ?>" maxlength="256" size="100"/></td>
+        </tr>
+        <tr>
+            <td>Send unsubscribers to </td>
+            <td><input type="text" name="email_unsubscribers" value="<?php echo esc_html( $options['email_unsubscribers'] ); ?>" maxlength="256" size="100"/></td>
+        </tr>
+        <tr>
+            <td>Send inactives to </td>
+            <td><input type="text" name="email_inactives" value="<?php echo esc_html( $options['email_inactives'] ); ?>" maxlength="256" size="100"/></td>
         </tr>
     </table>
 

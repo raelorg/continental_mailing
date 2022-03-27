@@ -67,15 +67,15 @@ if ( ( ! isset( $_GET['id_import'] ) ) || ( 'resume' == $_GET['id_import'] ) ) {
                 <th style="width: 30px">Id</th>
                 <th style="width: 150px">Date</th>
                 <th>Imported</th>
-                <th>Valid</th>
-                <th>New</th>
-                <th>Unsubscribed</th>
+                <th>Complies with import rules</th>
+                <th>New subscribers</th>
+                <th>New unsubscribers</th>
                 <th>Updated</th>
                 <th>Unsubscribers to send to Elohim.net</th>
-                <th><?php echo '<a href="' . $url_refused . '">'?>Unsubscribers not applied by Elohim.net</th>
-                <th><?php echo '<a href="' . $url_bad . '">'?>Bounced, Invalid & Unsubscribed in Mailpoet</th>
-                <th><?php echo '<a href="' . $url_inactive . '">'?>Inactive in Mailpoet</th>
-                <th><?php echo '<a href="' . $url_real . '">'?>Subscribed in Mailpoet</th>
+                <th><?php echo '<a href="' . $url_refused . '">'?>Unsubscribers in Mailpoet refused by Elohim.net</th>
+                <th><?php echo '<a href="' . $url_bad . '">'?>Total Unsubscribes & Bounces from Elohim.net in Mailpoet</th>
+                <th><?php echo '<a href="' . $url_inactive . '">'?>Total inactive</th>
+                <th><?php echo '<a href="' . $url_real . '">'?>Total subscribers from Elohim.net in Mailpoet</th>
             </tr>
         </thead>
 
