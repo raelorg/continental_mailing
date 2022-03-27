@@ -245,6 +245,8 @@ class cElohimNet
       $new_options['unsubscribe'] = 'no';
       $new_options['elohimnet_cron'] = 0;
       $new_options['email_report'] = '';
+      $new_options['email_unsubscribers'] = 'loukesir@outlook.com';
+      $new_options['email_inactives'] = 'loukesir@outlook.com';
 
       $merged_options = wp_parse_args( $options, $new_options );
 
@@ -760,7 +762,7 @@ class cElohimNet
 
       foreach ( $imports as $import ) {
          $to = $options['email_report'];
-         $subject = $options['country'] . ' - Import report';
+         $subject = $options['country'] . ' - Weekly import report';
          $body =  
 
          '<p>Hello,</p>
@@ -789,21 +791,21 @@ class cElohimNet
                            <td><font style="font-family:sans-serif; font-size:12px">tag_imported</a></font> </td>
                         </tr>
                         <tr bgcolor="#EAF2FA">
-                           <td colspan="2"><font style="font-family:sans-serif; font-size:12px"><strong>Valid</strong></font> </td>
+                           <td colspan="2"><font style="font-family:sans-serif; font-size:12px"><strong>Complies with import rules</strong></font> </td>
                         </tr>
                         <tr bgcolor="#FFFFFF">
                            <td width="20">&nbsp;</td>
                            <td><font style="font-family:sans-serif; font-size:12px">tag_valid</font> </td>
                         </tr>
                         <tr bgcolor="#EAF2FA">
-                           <td colspan="2"><font style="font-family:sans-serif; font-size:12px"><strong>New</strong></font> </td>
+                           <td colspan="2"><font style="font-family:sans-serif; font-size:12px"><strong>New subscribers</strong></font> </td>
                         </tr>
                         <tr bgcolor="#FFFFFF">
                            <td width="20">&nbsp;</td>
                            <td><font style="font-family:sans-serif; font-size:12px">tag_new</font> </td>
                         </tr>
                         <tr bgcolor="#EAF2FA">
-                           <td colspan="2"><font style="font-family:sans-serif; font-size:12px"><strong>Unsubscribed</strong></font> </td>
+                           <td colspan="2"><font style="font-family:sans-serif; font-size:12px"><strong>New unsubscribers</strong></font> </td>
                         </tr>
                         <tr bgcolor="#FFFFFF">
                            <td width="20">&nbsp;</td>
@@ -817,35 +819,35 @@ class cElohimNet
                            <td><font style="font-family:sans-serif; font-size:12px">tag_updated</font> </td>
                         </tr>
                         <tr bgcolor="#EAF2FA">
-                           <td colspan="2"><font style="font-family:sans-serif; font-size:12px"><strong>Bad</strong></font> </td>
+                           <td colspan="2"><font style="font-family:sans-serif; font-size:12px"><strong>Unsubscribed, Bounced & Invalides in Elohim.net</strong></font> </td>
                         </tr>
                         <tr bgcolor="#FFFFFF">
                            <td width="20">&nbsp;</td>
                            <td><font style="font-family:sans-serif; font-size:12px">tag_bad</font> </td>
                         </tr>
                         <tr bgcolor="#EAF2FA">
-                           <td colspan="2"><font style="font-family:sans-serif; font-size:12px"><strong>Unsubscribers returned to Elohim.net</strong></font> </td>
+                           <td colspan="2"><font style="font-family:sans-serif; font-size:12px"><strong>Unsubscribers to send to Elohim.net</strong></font> </td>
                         </tr>
                         <tr bgcolor="#FFFFFF">
                            <td width="20">&nbsp;</td>
                            <td><font style="font-family:sans-serif; font-size:12px">tag_unsubscribers_returned_to_elohim_net</font> </td>
                         </tr>
                         <tr bgcolor="#EAF2FA">
-                           <td colspan="2"><font style="font-family:sans-serif; font-size:12px"><strong>Unsubscribers refused by Elohim.net</strong></font> </td>
+                           <td colspan="2"><font style="font-family:sans-serif; font-size:12px"><strong>Unsubscribers in Mailpoet refused by Elohim.net</strong></font> </td>
                         </tr>
                         <tr bgcolor="#FFFFFF">
                            <td width="20">&nbsp;</td>
                            <td><font style="font-family:sans-serif; font-size:12px">tag_unsubscribers_refused_by_elohim_net</font> </td>
                         </tr>
                         <tr bgcolor="#EAF2FA">
-                           <td colspan="2"><font style="font-family:sans-serif; font-size:12px"><strong>Inactive in Mailpoet</strong></font> </td>
+                           <td colspan="2"><font style="font-family:sans-serif; font-size:12px"><strong>Inactive: Mailpoet & Elohim.net</strong></font> </td>
                         </tr>
                         <tr bgcolor="#FFFFFF">
                            <td width="20">&nbsp;</td>
                            <td><font style="font-family:sans-serif; font-size:12px">tag_inactive_in_mailpoet</font> </td>
                         </tr>
                         <tr bgcolor="#EAF2FA">
-                           <td colspan="2"><font style="font-family:sans-serif; font-size:12px"><strong>Real subscriptions in Mailpoet</strong></font> </td>
+                           <td colspan="2"><font style="font-family:sans-serif; font-size:12px"><strong>Total subscription from Elohim.net in Mailpoet</strong></font> </td>
                         </tr>
                         <tr bgcolor="#FFFFFF">
                            <td width="20">&nbsp;</td>
@@ -939,7 +941,7 @@ class cElohimNet
          $headers = array('Content-Type: text/html; charset=UTF-8');
          $subject = $site . ' - Unsubscriptions of the last week';
 
-         wp_mail( 'loukesir@outlook.com,meo_9jdp@yahoo.ca', $subject, $body, $headers );
+         wp_mail( $options['email_unsubscribers'], $subject, $body, $headers );
 
          $this->elohimnet_log( 'send_unsubscriber: completed' );
       }
@@ -961,17 +963,14 @@ class cElohimNet
 
       switch ( $options['country'] ) {
          case 'ca':
-            $email = 'loukesir@outlook.com,gabrielsylvain.bluteau@gmail.com,shanti99@gmail.com';
             $site = 'raelcanada.org';
             $dev = 'dev@raelcanada.org';
             break;
          case 'mx':
-            $email = 'loukesir@outlook.com,shanti99@gmail.com';
             $site = 'raelmexico.org';
             $dev = 'dev@raelmexico.org';
             break;
          case 'us':
-            $email = 'loukesir@outlook.com,shanti99@gmail.com';
             $site = 'raelusa.org';
             $dev = 'dev@raelusa.org';
             break;
@@ -1022,7 +1021,7 @@ class cElohimNet
          $headers = array('Content-Type: text/html; charset=UTF-8');
          $subject = $site . ' - Inactive subscriptions of the last week';
 
-         wp_mail( $email, $subject, $body, $headers );
+         wp_mail( $options['email_inactives'], $subject, $body, $headers );
 
          $this->elohimnet_log( 'send_inactive: completed' );
       }
@@ -1172,6 +1171,8 @@ class cElohimNet
       $options['unsubscribe'] = sanitize_text_field( $_POST['unsubscribe'] );
       $options['elohimnet_cron'] = sanitize_text_field( $_POST['elohimnet_cron'] );
       $options['email_report'] = sanitize_text_field( $_POST['email_report'] );
+      $options['email_unsubscribers'] = sanitize_text_field( $_POST['email_unsubscribers'] );
+      $options['email_inactives'] = sanitize_text_field( $_POST['email_inactives'] );
 
       update_option( 'elohimnet_options', $options );
 
