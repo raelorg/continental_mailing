@@ -977,12 +977,14 @@ class cElohimNet
       }
 
       $query = 
-         "SELECT CASE WHEN ISNULL(elo.email) THEN 'No' Else 'Yes' END as elohim, i.email, mp.first_name, mp.last_name, mp.status, mp.updated_at
-         FROM
-            elohimnet_import_inactive i
-            JOIN wp_mailpoet_subscribers mp on mp.email = i.email
-            LEFT JOIN elohimnet_email_data elo on elo.email = mp.email
-         WHERE i.id_import = (SELECT max(id_import) FROM elohimnet_import) ORDER BY i.email";
+         "SELECT s.name, i.email, mp.first_name, mp.last_name, mp.status, mp.updated_at
+         FROM elohimnet_import_inactive i
+         JOIN wp_mailpoet_subscribers mp on mp.email = i.email
+         JOIN wp_mailpoet_subscriber_segment ss on ss.subscriber_id = mp.id
+         JOIN wp_mailpoet_segments s on s.id = ss.segment_id
+         LEFT JOIN elohimnet_email_data elo on elo.email = mp.email
+         WHERE i.id_import = (SELECT max(id_import) FROM elohimnet_import) 
+         ORDER BY i.email";
 
       $rows = $wpdb->get_results( $query, ARRAY_A );
 
@@ -992,7 +994,7 @@ class cElohimNet
          foreach ( $rows as $row ) {
             $table .= 
             '<tr>
-               <td>' . $row['elohim'] . '</td>
+               <td>' . $row['name'] . '</td>
                <td>' . $row['email'] . '</td>
                <td>' . $row['first_name'] . '</td>
                <td>' . $row['last_name'] . '</td>
@@ -1013,7 +1015,7 @@ class cElohimNet
             }
          </style>
          <table>
-            <tr><th>Elohim.net?</th><th>Email</th><th>Firstname</th><th>Lastname</th><th>Status</th><th>Updated at</th></tr>';
+            <tr><th>List</th><th>Email</th><th>Firstname</th><th>Lastname</th><th>Status</th><th>Updated at</th></tr>';
 
          $table .= '</table>';
 
