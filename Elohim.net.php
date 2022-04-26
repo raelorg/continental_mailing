@@ -147,8 +147,14 @@ class cElohimNet
    // ---------------------------------------------------------
    public function cron_execution_inactive()
    {
-      $this->unsubscriber_report();
-      $this->inactive_report();
+      $site_url = get_site_url();
+
+      if (  ( $site_url === 'https://raelcanada.org/' ) ||
+            ( $site_url === 'https://raelmexico.org/' ) ||
+            ( $site_url === 'https://raelusa.org/' ) ) {
+         $this->unsubscriber_report();
+         $this->inactive_report();
+      }
    }
 
    // --------------------------------------------------------------------------------
