@@ -1012,7 +1012,7 @@ class cElohimNet
          $body =  
          '<p>Hello, IPT manager!</p>
          <p>Please DO NOT reply to this email, it is a <strong>notification</strong> from ' . $site . ' to inform you of the latest changes relating to inactive subscriptions.</p>
-         <p>What is an inactive subscription? A subscription becomes inactive when the contact has not opened any campaign for more than six months. At this time, the spam protection changes the status from Unsubscribed to Inactive and the contact no longer receives a campaign.</p>
+         <p>What is an inactive subscription? A subscription becomes inactive when the contact has not opened any campaign for more than six months. At this time, the spam protection changes the status from Subscribed to Inactive and the contact no longer receives a campaign.</p>
          <p>If you wish to have the complete list of inactive contacts for ' . $site . ', please send a request to <a href="mailto:' . $dev . '">' . $dev .  '</a></p>
          <style>
             table, th, td {
