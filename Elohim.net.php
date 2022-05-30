@@ -565,7 +565,8 @@ class cElohimNet
 
       $options = get_option( 'elohimnet_options', array() );
 
-      $query = "SELECT ed.email, ed.firstname, ed.lastname, ed.language FROM elohimnet_import_new n JOIN elohimnet_email_data ed ON ed.email = n.email WHERE n.id_import in (SELECT max(id_import) FROM elohimnet_import)";
+      // Double verification in the request with LEFT JOIN to be sure that the email don't already exists 
+      $query = "SELECT ed.email, ed.firstname, ed.lastname, ed.language FROM elohimnet_import_new n JOIN elohimnet_email_data ed ON ed.email = n.email LEFT JOIN wp_subscribers sub ON sub.email = ed.email WHERE n.id_import in (SELECT max(id_import) FROM elohimnet_import) AND sub.email IS NULL";
 
       $allNew = $wpdb->get_results( $query, ARRAY_A );
 
