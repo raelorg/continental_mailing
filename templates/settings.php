@@ -57,7 +57,7 @@ $options = get_option( 'elohimnet_options', array() );
 
     <table>
         <tr>
-            <td>Automatique?</td>
+            <td>Automatic?</td>
             <td>
                 <input type="radio" name="unsubscribe" value="no"  <?php echo ('no'  === $options['unsubscribe'] ? 'checked' : ''); ?>> No
                 <input type="radio" name="unsubscribe" value="yes" <?php echo ('yes' === $options['unsubscribe'] ? 'checked' : ''); ?>> Yes
@@ -68,23 +68,27 @@ $options = get_option( 'elohimnet_options', array() );
     <h2>Schedule</h2>
     <table>
         <tr>
-            <td>Day of execution (let empty to deactivate)</td>
+            <td>Day of execution (1=Sunday;2=Monday;etc.)</td>
             <td><input type="text" name="elohimnet_cron" value="<?php echo esc_html( $options['elohimnet_cron'] ); ?>" maxlength="1" size="1"/></td>
         </tr>
         <tr>
-            <td>Send import report to </td>
+            <td>Send import result to </td>
             <td><input type="text" name="email_report" value="<?php echo esc_html( $options['email_report'] ); ?>" maxlength="256" size="100"/></td>
         </tr>
         <tr>
-            <td>Send unsubscribers to </td>
+            <td>Sending reports (1=Sunday;2=Monday;etc.)</td>
+            <td><input type="text" name="sending_report" value="<?php echo esc_html( $options['sending_report'] ); ?>" maxlength="1" size="1"/></td>
+        </tr>
+        <tr>
+            <td>Report unsubscribers</td>
             <td><input type="text" name="email_unsubscribers" value="<?php echo esc_html( $options['email_unsubscribers'] ); ?>" maxlength="256" size="100"/></td>
         </tr>
         <tr>
-            <td>Send inactives to </td>
+            <td>Report inactive to</td>
             <td><input type="text" name="email_inactives" value="<?php echo esc_html( $options['email_inactives'] ); ?>" maxlength="256" size="100"/></td>
         </tr>
     </table>
 
     <br>
-    <input type="submit" value="Submit" class="button-primary"/>
+    <input type="submit" value="Save" class="button-primary"/>
 </form>
