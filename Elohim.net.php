@@ -44,6 +44,7 @@ class cElohimNet
 
    private $first_import;
    private $elohimnet_cron;
+   private $inactive_cron;
 
    // methods
    function __construct() {
@@ -100,7 +101,7 @@ class cElohimNet
       }
 
       // Forcer le démarrage une heure plus tard
-      wp_schedule_event(time() + (1 * 1 * 60 * 60), 'hourly', $this->inactive_cron );
+      wp_schedule_event(time() + (1 * 1 * 60 * 60), 'daily', $this->inactive_cron );
    }
 
    // ---------------------------------------------------------
@@ -124,36 +125,50 @@ class cElohimNet
    // ---------------------------------------------------------
    public function cron_execution_elohimnet()
    {
+      global $wpdb;
+
       $options = get_option( 'elohimnet_options', array() );
 
       // date('w') -> 0,1,2,3,4,5,6
       // 0 -> Sunday
       // 1 -> Monday
-      // 5 -> Friday
+      // 4 -> Thursday
       // 6 -> Saturday
-      $dayofweek = date('w') + 1;
+      $dayofweek = date('w') + 1; // Add +1 for parameter field 1 to 7
 
-      if ( $dayofweek != '' ) {
-         if ( $dayofweek == $options['elohimnet_cron'] ) {
-            $this->import();
-         } else {
-            $this->resume(); // Nécessaire pour USA car plusieurs reprises sont nécessaires
-         }
+      $query = "SELECT nb_import FROM elohimnet_import WHERE id_import = (SELECT max(id_import) FROM elohimnet_import)";
+      $nb_last_import = $wpdb->get_var( $query );
+
+      if ( ( $dayofweek != '' ) && ( $dayofweek == $options['elohimnet_cron'] ) && ( $nb_last_import != 0 ) ) {
+         $this->import();
+      } elseif ( $nb_last_import == 0 )  {
+         $this->resume(); // On reprend les autres jours au cas ou il y aurait eu un timeout      
       }
    }
 
    // ---------------------------------------------------------
-   // elohimnet_cron task execution
+   // inactive_cron task execution
    // ---------------------------------------------------------
    public function cron_execution_inactive()
    {
       $site_url = get_site_url();
 
-      if (  ( $site_url === 'https://raelcanada.org' ) ||
+      $options = get_option( 'elohimnet_options', array() );
+
+      // date('w') -> 0,1,2,3,4,5,6
+      // 0 -> Sunday
+      // 1 -> Monday
+      // 4 -> Thursday
+      // 6 -> Saturday
+      $dayofweek = date('w') + 1; // Add +1 for parameter field 1 to 7
+
+      if ( ( $dayofweek != '' ) && ( $dayofweek == $options['sending_report'] ) ) {
+         if (  ( $site_url === 'https://raelcanada.org' ) ||
             ( $site_url === 'https://raelmexico.org' ) ||
             ( $site_url === 'https://raelusa.org' ) ) {
-         $this->unsubscriber_report();
-         $this->inactive_report();
+            $this->unsubscriber_report();
+            $this->inactive_report();
+         }
       }
    }
 
@@ -253,6 +268,7 @@ class cElohimNet
       $new_options['email_report'] = '';
       $new_options['email_unsubscribers'] = 'loukesir@outlook.com';
       $new_options['email_inactives'] = 'loukesir@outlook.com';
+      $new_options['sending_report'] = 0;
 
       $merged_options = wp_parse_args( $options, $new_options );
 
@@ -373,13 +389,7 @@ class cElohimNet
             break;
       }
 
-      $inactive = $wpdb->get_var(  "Select count(*)
-                                    From
-                                       wp_mailpoet_subscribers sub
-                                       Join wp_mailpoet_subscriber_segment seg
-                                       on seg.subscriber_id = sub.id
-                                    Where seg.segment_id in (" . $list . ")
-                                      And sub.status = 'inactive'");
+      $inactive = $wpdb->get_var("Select count(*) From elohimnet_import_inactive");
 
       $active = $wpdb->get_var(      "Select count(distinct sub.email)
                                       From
@@ -1182,6 +1192,7 @@ class cElohimNet
       $options['email_report'] = sanitize_text_field( $_POST['email_report'] );
       $options['email_unsubscribers'] = sanitize_text_field( $_POST['email_unsubscribers'] );
       $options['email_inactives'] = sanitize_text_field( $_POST['email_inactives'] );
+      $options['sending_report'] = sanitize_text_field( $_POST['sending_report'] );
 
       update_option( 'elohimnet_options', $options );
 
@@ -1192,6 +1203,13 @@ class cElohimNet
          $this->cron_activation_elohimnet();
       } else {
          $this->cron_deactivation_elohimnet();
+      }
+
+      if ( in_array( $options['inactive_cron'], $weekday ) ) {
+         $this->cron_deactivation_inactive();
+         $this->cron_activation_inactive();
+      } else {
+         $this->cron_deactivation_inactive();
       }
    }
 }
