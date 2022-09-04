@@ -686,39 +686,25 @@ class cElohimNet
 
       $options = get_option( 'elohimnet_options', array() );
 
-      $query = "SELECT ed.email, ed.firstname, ed.lastname FROM elohimnet_import_deleted d JOIN elohimnet_email_data ed ON ed.email = d.email WHERE d.id_import in (SELECT max(id_import) FROM elohimnet_import)";
+      $query = "SELECT sub.id, ed.email, ed.firstname, ed.lastname, CURRENT_TIMESTAMP() as curdate FROM elohimnet_import_deleted d JOIN elohimnet_email_data ed ON ed.email = d.email JOIN wp_mailpoet_subscribers sub ON sub.email = d.email WHERE d.id_import in (SELECT max(id_import) FROM elohimnet_import)";
 
-      $allDeleted = $wpdb->get_results( $query, ARRAY_A );
+      $allUpdated = $wpdb->get_results( $query, ARRAY_A );
 
-      if ( $allDeleted ) {
-         if (class_exists(\MailPoet\API\API::class)) {
-            $mailpoet_api = \MailPoet\API\API::MP('v1');
+      if ( $allUpdated ) {
+         foreach ( $allUpdated as $row ) {
+            $data = array();
+            $data['status'] = 'unsubscribed';
+            $data['updated_at'] = $row['curdate'];
+            $where =  array();
+            $where['email'] = $row['email'];
+            $wpdb->update('wp_mailpoet_subscribers', $data, $where);
 
-            foreach ( $allDeleted as $delete ) {
-               $list = '';
-
-               switch ( $options['country']) {
-                  case 'ca':
-                     if ( $new['language'] === 'fr') {
-                        $list = $options['id_FR_list'];
-                     } else {
-                        $list = $options['id_EN_list'];
-                     }
-                     break;
-                  case 'mx':
-                     $list = $options['id_ES_list'];
-                     break;
-                  case 'us':
-                     $list = $options['id_EN_list'];
-                     break;
-               }
-
-               try {
-                  $subscriber = $mailpoet_api->unsubscribeFromList( $delete['email'], $list );
-               } catch (\Exception $e) {
-                  $this->elohimnet_log( 'process_unsubscribe: Mailpoet unsubscribe error ' . $exception->getMessage() );
-               }
-            }
+            $data = array();
+            $data['status'] = 'unsubscribed';
+            $data['updated_at'] = $row['curdate'];
+            $where =  array();
+            $where['subscriber_id'] = $row['id'];
+            $wpdb->update('wp_mailpoet_subscribers', $data, $where);
          }
       }
 
