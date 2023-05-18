@@ -11,6 +11,7 @@
 
     $url_add_new = admin_url( 'admin.php' ) . '?page=elohimnet_plugin&id_import=new';
     $url_add_resume = admin_url( 'admin.php' ) . '?page=elohimnet_plugin&id_import=resume';
+    $url_add_repair = admin_url( 'admin.php' ) . '?page=elohimnet_plugin&id_import=repair';
     $url_help = admin_url( 'admin.php' ) . '?page=elohimnet_plugin_help';
     $url_admin = admin_url( 'admin.php' ) . '?page=elohimnet_plugin';
     $url_log = admin_url( 'admin.php' ) . '?page=elohimnet_plugin&id_import=';
@@ -32,6 +33,7 @@
 <h2>Imports from Elohim.net
     <a class="add-new-h2" href="<?php echo $url_add_new ?>">New Import</a>
     <a class="add-new-h2" href="<?php echo $url_add_resume ?>">Resume last import</a>
+    <a class="add-new-h2" href="<?php echo $url_add_repair ?>">Repair</a>
 </h2>
 
 <?php
@@ -47,6 +49,13 @@ if ( isset( $_GET['id_import'] ) && ( 'new' == $_GET['id_import'] ) ) {
 // ---------------------------------------------------------------
 if ( 'resume' == $_GET['id_import'] ) {
     do_action( 'do_resume' );
+}
+
+// ---------------------------------------------------------------
+// Corriger un problème
+// ---------------------------------------------------------------
+if ( 'repair' == $_GET['id_import'] ) {
+    do_action( 'do_repair' );
 }
 
 // ---------------------------------------------------------------
