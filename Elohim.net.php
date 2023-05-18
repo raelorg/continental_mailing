@@ -73,6 +73,7 @@ class cElohimNet
       add_action( 'admin_menu', array ( $this, 'add_admin_pages' ) );
       add_action( 'do_import', array( $this, 'import' ) );
       add_action( 'do_resume', array( $this, 'resume' ) );
+      add_action( 'do_repair', array( $this, 'repair' ) );
       add_action( $this->elohimnet_cron, array( $this, 'cron_execution_elohimnet' ) );
       add_action( $this->inactive_cron, array( $this, 'cron_execution_inactive' ) );
       add_action( 'do_save_settings', array( $this, 'save_settings') );
@@ -576,7 +577,7 @@ class cElohimNet
       $options = get_option( 'elohimnet_options', array() );
 
       // Double verification in the request with LEFT JOIN to be sure that the email don't already exists 
-      $query = "SELECT ed.email, ed.firstname, ed.lastname, ed.language FROM elohimnet_import_new n JOIN elohimnet_email_data ed ON ed.email = n.email LEFT JOIN wp_subscribers sub ON sub.email = ed.email WHERE n.id_import in (SELECT max(id_import) FROM elohimnet_import) AND sub.email IS NULL";
+      $query = "SELECT ed.email, ed.firstname, ed.lastname, ed.language FROM elohimnet_import_new n JOIN elohimnet_email_data ed ON ed.email = n.email LEFT JOIN wp_mailpoet_subscribers sub ON sub.email = ed.email WHERE n.id_import in (SELECT max(id_import) FROM elohimnet_import) AND sub.email IS NULL";
 
       $allNew = $wpdb->get_results( $query, ARRAY_A );
 
@@ -651,6 +652,81 @@ class cElohimNet
 
       $this->elohimnet_log( 'process_new: completed' );
    } // process_new
+
+   function repair() {
+      global $wpdb;
+
+      $this->elohimnet_log( 'repair: begin' );
+
+      $options = get_option( 'elohimnet_options', array() );
+
+      $query = "SELECT ed.email, ed.firstname, ed.lastname, ed.language FROM elohimnet_import_new n JOIN elohimnet_email_data ed ON ed.email = n.email LEFT JOIN wp_mailpoet_subscribers s ON s.email = n.email WHERE n.id_import > 157 AND s.email IS NULL";
+      
+      $allNew = $wpdb->get_results( $query, ARRAY_A );
+
+      if ( $allNew ) {
+         if (class_exists(\MailPoet\API\API::class)) {
+            $this->elohimnet_log( 'repair: mailpoet API ok' );
+
+            $mailpoet_api = \MailPoet\API\API::MP('v1');
+
+            foreach ( $allNew as $new ) {
+               $subscriber_data = array(
+                  'email' => $new['email'],
+                  'first_name' => $new['firstname'],
+                  'last_name' => $new['lastname']
+               );
+
+               $list = '';
+
+               switch ( $options['country']) {
+                  case 'ca':
+                     if ( $new['language'] === 'fr') {
+                        $list = $options['id_FR_list'];
+                     } else {
+                        $list = $options['id_EN_list'];
+                     }
+                     break;
+                  case 'mx':
+                     $list = $options['id_ES_list'];
+                     break;
+                  case 'us':
+                     $list = $options['id_EN_list'];
+                     break;
+               }
+
+               $b_OK = true;
+               $subscriber = array();
+
+               try {
+                  $subscriber = \MailPoet\API\API::MP('v1')->getSubscriber($new['email']); // $identifier can be either a subscriber ID or e-mail
+               } catch(Exception $exception) {
+                  try {
+                     $subscriber = $mailpoet_api->addSubscriber( $subscriber_data );
+                  } catch (\Exception $e) {
+                     $b_OK = false;
+
+                     $this->elohimnet_log( 'process_new: duplicate ' . $new['email'] );
+                  }
+               }
+
+               if ( ( $b_OK ) && ( $this->id_import == 0 ) ) {
+                  $this->elohimnet_log( 'repair: list ok' );
+
+                  $segment_data = array();
+                  $segment_data['subscriber_id'] = $subscriber['id'];
+                  $segment_data['segment_id'] = $list;
+                  $segment_data['status'] = 'subscribed';
+
+                  $wpdb->update( 'wp_mailpoet_subscribers', array( 'status' => 'subscribed'), array( 'email' => $new['email'] ) );
+                  $wpdb->insert( 'wp_mailpoet_subscriber_segment', $segment_data );
+               }
+            }
+         }
+      }
+
+      $this->elohimnet_log( 'repair: end' );
+   }
 
    // ----------------------------------------------------------------------------------
    // Update first name and last name in Mailpoet
